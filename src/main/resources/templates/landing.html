@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to E-Voting System</title>
+    <link rel="stylesheet" href="/static/landing.css">
+</head>
+<body>
+<!-- Navbar with Login Button -->
+<header>
+    <h1>E-Voting System</h1>
+    <button class="login-button" onclick="login()">Login</button>
+</header>
+
+<!-- Sliding Candidate Section -->
+<section id="candidate-slider">
+    <h2>Meet the Candidates</h2>
+    <div class="slider">
+        <div id="candidateContainer" class="slide">
+            <!-- Candidate images will be loaded here dynamically -->
+        </div>
+    </div>
+</section>
+
+<!-- Voting Information Section -->
+<section class="info-section">
+    <h2>Why Your Vote Matters</h2>
+    <p>Voting is the cornerstone of democracy. By voting, you are participating in the direction of our future. This system ensures transparency, fairness, and security, making it easy for you to cast your vote with confidence.</p>
+</section>
+
+<script>
+    // Dummy candidate data (in real application, this could be dynamically loaded from an API)
+    const candidates = [
+        { name: "John Doe", party: "Democratic Party", position: "President", img: "https://via.placeholder.com/150" },
+        { name: "Jane Smith", party: "Republican Party", position: "Governor", img: "https://via.placeholder.com/150" },
+        { name: "Albert Johnson", party: "Independent", position: "Senator", img: "https://via.placeholder.com/150" }
+    ];
+
+    // Display candidates in the slider
+    const candidateContainer = document.getElementById("candidateContainer");
+    let currentIndex = 0;
+
+    function showCandidate(index) {
+        candidateContainer.innerHTML = `
+                <img src="${candidates[index].img}" alt="${candidates[index].name}">
+                <div class="candidate-info">
+                    <h3>${candidates[index].name}</h3>
+                    <p>Party: ${candidates[index].party}</p>
+                    <p>Position: ${candidates[index].position}</p>
+                </div>
+            `;
+    }
+
+    function nextCandidate() {
+        currentIndex = (currentIndex + 1) % candidates.length;
+        showCandidate(currentIndex);
+    }
+
+    setInterval(nextCandidate, 3000); // Slide candidates every 3 seconds
+    showCandidate(currentIndex); // Initial display
+
+    // Login button action
+    function login() {
+        alert("Redirecting to login page...");
+        // Redirect to login page (add URL of login page here)
+        window.location.href = "/login";
+    }
+</script>
+</body>
+</html>
