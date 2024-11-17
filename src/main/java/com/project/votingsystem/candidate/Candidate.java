@@ -24,5 +24,12 @@ public class Candidate {
     @Lob
     @Column(columnDefinition = "BLOB")
     private byte[] image; // Candidate's image stored as binary data (Blob)
+
+    @Lob
+    @Column(columnDefinition = "TEXT", nullable = true)
+    private String manifesto; // Candidate's manifesto (large text field)
+
+    @Column(nullable = false)
+    private int voteCount = 0; // Number of votes the candidate has received
 }
 

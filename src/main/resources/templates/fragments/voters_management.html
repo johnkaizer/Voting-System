@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voter Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .modal-header {
+            background-color: #007bff;
+            color: white;
+        }
+        .table-responsive {
+            margin-top: 20px;
+        }
+        .btn-primary {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2 class="header">Voter Management</h2>
+    <button class="btn btn-primary" id="addVoterButton">
+        <i class="fas fa-plus-circle"></i> Add New Voter
+    </button>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>National ID</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody id="voterTableBody">
+            <!-- Dynamically populated rows -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal for Add/Edit Voter -->
+<div class="modal fade" id="voterModal" tabindex="-1" aria-labelledby="voterModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="voterModalLabel">Add New Voter</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="voterForm">
+                    <div class="mb-3">
+                        <label for="voterName" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="voterName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nationalId" class="form-label">National ID</label>
+                        <input type="text" class="form-control" id="nationalId" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="voterPassword" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="voterPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Save Voter</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script>
+    $(document).ready(function () {
+        const apiBaseUrl = "/api/voters";
+        let editingVoterId = null;
+
+        const fetchVoters = () => {
+            $.get(`${apiBaseUrl}/all`, function (voters) {
+                const tableBody = $("#voterTableBody");
+                tableBody.empty();
+                voters.forEach((voter, index) => {
+                    const row = `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${voter.name}</td>
+                        <td>${voter.nationalId}</td>
+                        <td>${voter.votingStatus ? 'Voted' : 'Not Voted'}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="editVoter(${voter.voterId})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteVoter(${voter.voterId})">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                    tableBody.append(row);
+                });
+            });
+        };
+
+        const resetForm = () => {
+            $("#voterForm")[0].reset();
+            editingVoterId = null;
+            $("#voterModalLabel").text("Add New Voter");
+        };
+
+        $("#addVoterButton").click(() => {
+            resetForm();
+            $("#voterModal").modal("show");
+        });
+
+        $("#voterForm").submit(function (event) {
+            event.preventDefault();
+            const voter = {
+                name: $("#voterName").val(),
+                nationalId: $("#nationalId").val(),
+                password: $("#voterPassword").val(),
+            };
+
+            if (editingVoterId) {
+                $.ajax({
+                    url: `${apiBaseUrl}/update/${editingVoterId}`,
+                    method: "PUT",
+                    contentType: "application/json",
+                    data: JSON.stringify(voter),
+                    success: fetchVoters,
+                    error: () => alert("Failed to update voter."),
+                });
+            } else {
+                $.ajax({
+                    url: `${apiBaseUrl}/register`,
+                    method: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(voter),
+                    success: fetchVoters,
+                    error: (xhr) => {
+                        const errorMessage = xhr.responseText || "Failed to register voter.";
+                        alert(errorMessage);
+                    },
+                });
+            }
+            $("#voterModal").modal("hide");
+        });
+
+        window.editVoter = (id) => {
+            $.get(`${apiBaseUrl}/${id}`, function (voter) {
+                editingVoterId = id;
+                $("#voterName").val(voter.name);
+                $("#nationalId").val(voter.nationalId);
+                $("#voterPassword").val(voter.password);
+                $("#voterModalLabel").text("Edit Voter");
+                $("#voterModal").modal("show");
+            });
+        };
+
+        window.deleteVoter = (id) => {
+            if (confirm("Are you sure you want to delete this voter?")) {
+                $.ajax({
+                    url: `${apiBaseUrl}/delete/${id}`,
+                    method: "DELETE",
+                    success: fetchVoters,
+                    error: () => alert("Failed to delete voter."),
+                });
+            }
+        };
+
+        fetchVoters();
+    });
+
+</script>
+
+</body>
+</html>

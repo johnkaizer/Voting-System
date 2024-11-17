@@ -11,13 +11,13 @@ public class VotingSystemController {
     public String landing() {
         return "landing";
     }
-    @GetMapping("/dashboard_admin")
-    public String dashboard_admin() {
-        return "dashboard_admin";
+    @GetMapping("/adminDashboard")
+    public String adminDashboard() {
+        return "adminDashboard";
     }
-    @GetMapping("/dashboard_user")
-    public String dashboard_user() {
-        return "dashboard_user";
+    @GetMapping("/voterDashboard")
+    public String voterDashboard() {
+        return "voterDashboard";
     }
     @GetMapping("/login")
     public String login() {

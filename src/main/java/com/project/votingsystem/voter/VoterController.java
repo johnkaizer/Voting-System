@@ -4,10 +4,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.view.RedirectView;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.prefs.Preferences;
 
 @RestController
 @RequestMapping("/api/voters")
@@ -22,28 +26,62 @@ public class VoterController {
         String nationalId = voterData.get("nationalId");
         String name = voterData.get("name");
         String password = voterData.get("password");
-        String role = voterData.get("role");
 
+        // Ensure role is always "VOTER"
+        String role = "VOTER";
+
+        // Call the service to register the voter
         String response = voterService.registerVoter(nationalId, name, password, role);
-        return response.contains("successfully") ? ResponseEntity.ok(response) : ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+
+        // Return the appropriate response
+        return response.contains("successfully")
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
-    // Endpoint to log in a voter
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> loginVoter(@RequestBody Map<String, String> loginData) {
-        String nationalId = loginData.get("nationalId");
-        String password = loginData.get("password");
+    public ModelAndView login(@RequestParam String nationalId,
+                              @RequestParam String password,
+                              RedirectAttributes redirectAttributes) {
+        // Authenticate voter
+        Optional<Voter> optionalVoter = voterService.loginVoter(nationalId, password);
 
-        Optional<Voter> voter = voterService.loginVoter(nationalId, password);
-        if (voter.isPresent()) {
-            Voter loggedInVoter = voter.get();
-            return ResponseEntity.ok(Map.of(
-                    "message", "Login successful",
-                    "name", loggedInVoter.getName(),
-                    "voterId", loggedInVoter.getVoterId()
-            ));
+        if (optionalVoter.isPresent()) {
+            Voter voter = optionalVoter.get();
+
+            // Save role, ID, and national ID in preferences
+            Preferences prefs = Preferences.userNodeForPackage(VoterController.class);
+            prefs.putLong("loggedInVoterId", voter.getVoterId());
+            prefs.put("loggedInVoterNationalId", voter.getNationalId());
+            prefs.put("loggedInVoterRole", voter.getRole());
+
+            // Redirect based on user role
+            if ("ADMIN".equals(voter.getRole())) {
+                return new ModelAndView(new RedirectView("/adminDashboard"));
+            } else if ("VOTER".equals(voter.getRole())) {
+                return new ModelAndView(new RedirectView("/voterDashboard"));
+            } else {
+                redirectAttributes.addFlashAttribute("errorMessage", "Access denied: Unknown role");
+                return new ModelAndView(new RedirectView("/login"));
+            }
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Invalid National ID or password");
+            return new ModelAndView(new RedirectView("/login"));
         }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Invalid National ID or password."));
+    }
+
+
+    // POST: Handle logout
+    @PostMapping("/logout")
+    public ModelAndView logout() {
+        // Clear stored preferences
+        Preferences prefs = Preferences.userNodeForPackage(VoterController.class);
+        prefs.remove("loggedInVoterId");
+        prefs.remove("loggedInVoterNationalId");
+        prefs.remove("loggedInVoterRole");
+
+        // Redirect to login page
+        return new ModelAndView(new RedirectView("/login"));
     }
 
     // Admin: Get all voters
@@ -65,16 +103,20 @@ public class VoterController {
     public ResponseEntity<String> updateVoter(@PathVariable Long voterId, @RequestBody Map<String, String> voterData) {
         String name = voterData.get("name");
         String password = voterData.get("password");
-        String role = voterData.get("role");
 
-        String response = voterService.updateVoter(voterId, name, password, role);
-        return response.contains("updated successfully") ? ResponseEntity.ok(response) : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        // Enforce role as VOTER during updates
+        String response = voterService.updateVoter(voterId, name, password, "VOTER");
+        return response.contains("updated successfully")
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
-    // Admin: Delete a voter by ID
     @DeleteMapping("/delete/{voterId}")
     public ResponseEntity<String> deleteVoter(@PathVariable Long voterId) {
         String response = voterService.deleteVoter(voterId);
-        return response.contains("deleted successfully") ? ResponseEntity.ok(response) : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        return response.contains("deleted successfully")
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
+
 }

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candidate Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .modal-header {
+            background-color: #007bff;
+            color: white;
+        }
+        .table-responsive {
+            margin-top: 20px;
+        }
+        .btn-primary {
+            margin-bottom: 10px;
+        }
+        .candidate-image {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2 class="header">Candidate Management</h2>
+    <button class="btn btn-primary" id="addCandidateButton">
+        <i class="fas fa-plus-circle"></i> Add New Candidate
+    </button>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Party Affiliation</th>
+                <th>Position</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody id="candidateTableBody">
+            <!-- Dynamically populated rows -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal for Add/Edit Candidate -->
+<div class="modal fade" id="candidateModal" tabindex="-1" aria-labelledby="candidateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="candidateModalLabel">Add New Candidate</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="candidateForm">
+                    <div class="mb-3">
+                        <label for="candidateName" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="candidateName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="partyAffiliation" class="form-label">Party Affiliation</label>
+                        <input type="text" class="form-control" id="partyAffiliation" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="position" class="form-label">Position</label>
+                        <select class="form-control" id="position" required>
+                            <option value="" disabled selected>Select a position</option>
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="candidateImage" class="form-label">Image</label>
+                        <input type="file" class="form-control" id="candidateImage" accept="image/*">
+                    </div>
+                    <button type="submit" class="btn btn-success">Save Candidate</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script>
+    $(document).ready(function () {
+        const apiBaseUrl = "/api/candidates";
+        const categoriesApiUrl = "/api/categories"; // Endpoint to fetch categories
+        let editingCandidateId = null;
+
+        // Function to fetch and populate categories
+        const fetchCategories = () => {
+            $.get(categoriesApiUrl, function (categories) {
+                const positionDropdown = $("#position");
+                positionDropdown.empty();
+                positionDropdown.append('<option value="" disabled selected>Select a position</option>');
+                categories.forEach(category => {
+                    positionDropdown.append(`<option value="${category.name}">${category.name}</option>`);
+                });
+            });
+        };
+
+        // Function to fetch and display candidates
+        const fetchCandidates = () => {
+            $.get(`${apiBaseUrl}/all`, function (candidates) {
+                const tableBody = $("#candidateTableBody");
+                tableBody.empty();
+                candidates.forEach((candidate, index) => {
+                    const row = `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>
+                            <img src="data:image/jpeg;base64,${candidate.image}" alt="Candidate Image" class="candidate-image">
+                        </td>
+                        <td>${candidate.name}</td>
+                        <td>${candidate.partyAffiliation}</td>
+                        <td>${candidate.position}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="editCandidate(${candidate.candidateId})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteCandidate(${candidate.candidateId})">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                    tableBody.append(row);
+                });
+            });
+        };
+
+        const resetForm = () => {
+            $("#candidateForm")[0].reset();
+            editingCandidateId = null;
+            $("#candidateModalLabel").text("Add New Candidate");
+        };
+
+        $("#addCandidateButton").click(() => {
+            resetForm();
+            fetchCategories(); // Populate dropdown when opening modal
+            $("#candidateModal").modal("show");
+        });
+
+        $("#candidateForm").submit(function (event) {
+            event.preventDefault();
+            const formData = new FormData();
+            formData.append("name", $("#candidateName").val());
+            formData.append("partyAffiliation", $("#partyAffiliation").val());
+            formData.append("position", $("#position").val());
+            const imageFile = $("#candidateImage")[0].files[0];
+            if (imageFile) {
+                formData.append("image", imageFile);
+            }
+
+            if (editingCandidateId) {
+                $.ajax({
+                    url: `${apiBaseUrl}/update/${editingCandidateId}`,
+                    method: "PUT",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: fetchCandidates,
+                    error: () => alert("Failed to update candidate."),
+                });
+            } else {
+                $.ajax({
+                    url: `${apiBaseUrl}/add`,
+                    method: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: fetchCandidates,
+                    error: () => alert("Failed to add candidate."),
+                });
+            }
+            $("#candidateModal").modal("hide");
+        });
+
+        window.editCandidate = (id) => {
+            $.get(`${apiBaseUrl}/${id}`, function (candidate) {
+                editingCandidateId = id;
+                $("#candidateName").val(candidate.name);
+                $("#partyAffiliation").val(candidate.partyAffiliation);
+                $("#position").val(candidate.position);
+                fetchCategories(); // Ensure dropdown is populated before showing modal
+                $("#candidateModalLabel").text("Edit Candidate");
+                $("#candidateModal").modal("show");
+            });
+        };
+
+        window.deleteCandidate = (id) => {
+            if (confirm("Are you sure you want to delete this candidate?")) {
+                $.ajax({
+                    url: `${apiBaseUrl}/delete/${id}`,
+                    method: "DELETE",
+                    success: fetchCandidates,
+                    error: () => alert("Failed to delete candidate."),
+                });
+            }
+        };
+
+        // Initial fetch
+        fetchCandidates();
+        fetchCategories(); // Populate dropdown on page load
+    });
+</script>
+</body>
+</html>

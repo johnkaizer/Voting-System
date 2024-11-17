@@ -4,7 +4,142 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome to E-Voting System</title>
-    <link rel="stylesheet" href="/static/landing.css">
+    <style>
+        /* General Styling */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f4f4f9;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Header and Login Button */
+        header {
+            width: 100%;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #2c3e50;
+            color: #fff;
+        }
+
+        header h1 {
+            font-size: 24px;
+        }
+
+        .login-button {
+            padding: 10px 20px;
+            background-color: #e74c3c;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+
+        .login-button:hover {
+            background-color: #c0392b;
+        }
+
+        /* Candidate Slider Section */
+        #candidate-slider {
+            width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .slider {
+            display: flex;
+            animation: slide 15s linear infinite;
+        }
+
+        @keyframes slide {
+            0% {
+                transform: translateX(100%);
+            }
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        .card {
+            flex: 0 0 auto;
+            width: 300px;
+            margin: 10px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            padding: 15px;
+        }
+
+        .card img {
+            width: 80%;
+            height: auto;
+            border-radius: 50%;
+            margin-bottom: 15px;
+        }
+
+        .card h3 {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        /* Advice Section */
+        .advice-container {
+            width: 90%;
+            max-width: 800px;
+            margin: 20px 0;
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .advice-container h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .advice-container ul {
+            list-style-type: disc;
+            padding-left: 20px;
+            color: #7f8c8d;
+        }
+
+        .advice-container ul li {
+            margin: 10px 0;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 20px;
+            width: 100%;
+            padding: 10px;
+            text-align: center;
+            background-color: #2c3e50;
+            color: #fff;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
 <!-- Navbar with Login Button -->
@@ -15,57 +150,68 @@
 
 <!-- Sliding Candidate Section -->
 <section id="candidate-slider">
-    <h2>Meet the Candidates</h2>
-    <div class="slider">
-        <div id="candidateContainer" class="slide">
-            <!-- Candidate images will be loaded here dynamically -->
-        </div>
+    <div class="slider" id="candidateContainer">
+        <!-- Candidate cards will be loaded here dynamically -->
     </div>
 </section>
 
-<!-- Voting Information Section -->
-<section class="info-section">
-    <h2>Why Your Vote Matters</h2>
-    <p>Voting is the cornerstone of democracy. By voting, you are participating in the direction of our future. This system ensures transparency, fairness, and security, making it easy for you to cast your vote with confidence.</p>
-</section>
+<!-- Advice Section -->
+<div class="advice-container">
+    <h2>Advice to Voters</h2>
+    <ul>
+        <li>Review the candidates' profiles and manifestos carefully before voting.</li>
+        <li>Ensure your ID number is registered and you have access to the E-voting system.</li>
+        <li>Vote early to avoid last-minute issues or technical delays.</li>
+        <li>Remember, your vote is confidential; do not share your login details.</li>
+        <li>Make informed decisions based on the candidates’ qualifications and policies.</li>
+    </ul>
+</div>
+
+<!-- Footer -->
+<footer>
+    <p>© 2024 E-Voting System. All rights reserved. Powered by Technology for Democracy.</p>
+</footer>
 
 <script>
-    // Dummy candidate data (in real application, this could be dynamically loaded from an API)
-    const candidates = [
-        { name: "John Doe", party: "Democratic Party", position: "President", img: "https://via.placeholder.com/150" },
-        { name: "Jane Smith", party: "Republican Party", position: "Governor", img: "https://via.placeholder.com/150" },
-        { name: "Albert Johnson", party: "Independent", position: "Senator", img: "https://via.placeholder.com/150" }
-    ];
+    async function fetchCandidates() {
+        const candidateContainer = document.getElementById("candidateContainer");
 
-    // Display candidates in the slider
-    const candidateContainer = document.getElementById("candidateContainer");
-    let currentIndex = 0;
+        try {
+            const response = await fetch("/api/candidates/all");
+            if (!response.ok) {
+                throw new Error("Network response was not ok");
+            }
 
-    function showCandidate(index) {
-        candidateContainer.innerHTML = `
-                <img src="${candidates[index].img}" alt="${candidates[index].name}">
-                <div class="candidate-info">
-                    <h3>${candidates[index].name}</h3>
-                    <p>Party: ${candidates[index].party}</p>
-                    <p>Position: ${candidates[index].position}</p>
-                </div>
-            `;
+            const candidates = await response.json();
+
+            candidates.forEach(candidate => {
+                const card = document.createElement("div");
+                card.classList.add("card");
+
+                // Ensure image decoding handles Base64 correctly
+                const base64Image = `data:image/jpeg;base64,${candidate.image}`;
+
+                card.innerHTML = `
+                    <img src="${base64Image}" alt="${candidate.name}">
+                    <h3>${candidate.name}</h3>
+                    <p>Party: ${candidate.partyAffiliation}</p>
+                    <p>Position: ${candidate.position}</p>
+                `;
+                candidateContainer.appendChild(card);
+            });
+        } catch (error) {
+            console.error("Failed to load candidates:", error);
+            candidateContainer.innerHTML = "<p>Error loading candidates. Please try again later.</p>";
+        }
     }
 
-    function nextCandidate() {
-        currentIndex = (currentIndex + 1) % candidates.length;
-        showCandidate(currentIndex);
-    }
-
-    setInterval(nextCandidate, 3000); // Slide candidates every 3 seconds
-    showCandidate(currentIndex); // Initial display
-
-    // Login button action
     function login() {
-        alert("Redirecting to login page...");
-        // Redirect to login page (add URL of login page here)
         window.location.href = "/login";
     }
+
+    // Load candidates on page load
+    window.onload = fetchCandidates;
 </script>
+
 </body>
 </html>

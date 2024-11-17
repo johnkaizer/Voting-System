@@ -1,0 +1,53 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f4f4f4;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.top-menu {
+    background: #2c3e50;
+    color: #fff;
+    padding: 10px 0;
+}
+
+.top-menu ul {
+    list-style: none;
+    display: flex;
+    margin: 0;
+    padding: 0;
+    justify-content: space-around;
+}
+
+.top-menu ul li {
+    padding: 10px 20px;
+}
+
+.top-menu ul li a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.top-menu ul li.active {
+    background: #1abc9c;
+}
+
+.logout-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.main-content {
+    flex-grow: 1;
+    padding: 20px;
+}
