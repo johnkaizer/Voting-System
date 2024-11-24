@@ -13,12 +13,13 @@ public class CandidateService {
     private CandidateRepository candidateRepository;
 
     // Add a new candidate
-    public String addCandidate(String name, String partyAffiliation, String position, byte[] image) {
+    public String addCandidate(String name, String partyAffiliation, String position, byte[] image,String manifesto) {
         Candidate candidate = new Candidate();
         candidate.setName(name);
         candidate.setPartyAffiliation(partyAffiliation);
         candidate.setPosition(position);
         candidate.setImage(image);
+        candidate.setManifesto(manifesto);
         candidateRepository.save(candidate);
         return "Candidate added successfully.";
     }

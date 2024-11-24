@@ -22,10 +22,11 @@ public class CandidateController {
     public ResponseEntity<String> addCandidate(@RequestParam String name,
                                                @RequestParam String partyAffiliation,
                                                @RequestParam String position,
-                                               @RequestParam("image") MultipartFile imageFile) {
+                                               @RequestParam("image") MultipartFile imageFile,
+                                               @RequestParam String manifesto) {
         try {
             byte[] image = imageFile.getBytes();
-            String response = candidateService.addCandidate(name, partyAffiliation, position, image);
+            String response = candidateService.addCandidate(name, partyAffiliation, position, image,manifesto);
             return ResponseEntity.ok(response);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload image.");

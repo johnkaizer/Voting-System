@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to E-Voting System</title>
+    <title>E-Voting System</title>
     <style>
         /* General Styling */
         * {
@@ -21,7 +21,6 @@
             align-items: center;
         }
 
-        /* Header and Login Button */
         header {
             width: 100%;
             padding: 20px;
@@ -50,27 +49,12 @@
             background-color: #c0392b;
         }
 
-        /* Candidate Slider Section */
         #candidate-slider {
             width: 100%;
-            overflow: hidden;
-            white-space: nowrap;
             margin: 20px 0;
-            position: relative;
-        }
-
-        .slider {
             display: flex;
-            animation: slide 15s linear infinite;
-        }
-
-        @keyframes slide {
-            0% {
-                transform: translateX(100%);
-            }
-            100% {
-                transform: translateX(-100%);
-            }
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .card {
@@ -91,18 +75,26 @@
             margin-bottom: 15px;
         }
 
-        .card h3 {
-            font-size: 18px;
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
-
-        .card p {
+        .card button {
+            padding: 10px;
+            margin: 5px;
+            width: 45%;
             font-size: 14px;
-            color: #7f8c8d;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
         }
 
-        /* Advice Section */
+        .view-button {
+            background-color: #3498db;
+            color: #fff;
+        }
+
+        .vote-button {
+            background-color: #2ecc71;
+            color: #fff;
+        }
+
         .advice-container {
             width: 90%;
             max-width: 800px;
@@ -113,23 +105,6 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        .advice-container h2 {
-            text-align: center;
-            color: #2c3e50;
-            margin-bottom: 15px;
-        }
-
-        .advice-container ul {
-            list-style-type: disc;
-            padding-left: 20px;
-            color: #7f8c8d;
-        }
-
-        .advice-container ul li {
-            margin: 10px 0;
-        }
-
-        /* Footer */
         footer {
             margin-top: 20px;
             width: 100%;
@@ -139,79 +114,234 @@
             color: #fff;
             font-size: 14px;
         }
+
+        /* Modal Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .modal-header {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .modal-close {
+            cursor: pointer;
+            color: #e74c3c;
+            float: right;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        /* Filter Dropdown */
+        .filter-container {
+            margin-bottom: 20px;
+        }
+
+        .filter-select {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
-<!-- Navbar with Login Button -->
 <header>
     <h1>E-Voting System</h1>
-    <button class="login-button" onclick="login()">Login</button>
+    <button class="login-button" onclick="CandidateApp.login()">Login</button>
 </header>
 
-<!-- Sliding Candidate Section -->
-<section id="candidate-slider">
-    <div class="slider" id="candidateContainer">
-        <!-- Candidate cards will be loaded here dynamically -->
-    </div>
-</section>
+<div class="filter-container">
+    <label for="filter">Filter by Position:</label>
+    <select id="filter" class="filter-select" onchange="CandidateApp.filterCandidates()">
+        <option value="all">All</option>
+        <!-- Options will be loaded dynamically -->
+    </select>
+</div>
 
-<!-- Advice Section -->
+<section id="candidate-slider"></section>
+
 <div class="advice-container">
     <h2>Advice to Voters</h2>
     <ul>
-        <li>Review the candidates' profiles and manifestos carefully before voting.</li>
-        <li>Ensure your ID number is registered and you have access to the E-voting system.</li>
-        <li>Vote early to avoid last-minute issues or technical delays.</li>
-        <li>Remember, your vote is confidential; do not share your login details.</li>
-        <li>Make informed decisions based on the candidates’ qualifications and policies.</li>
+        <li>Review candidates' profiles and manifestos carefully.</li>
+        <li>Vote early to avoid issues.</li>
     </ul>
 </div>
 
-<!-- Footer -->
 <footer>
-    <p>© 2024 E-Voting System. All rights reserved. Powered by Technology for Democracy.</p>
+    <p>© 2024 E-Voting System</p>
 </footer>
 
+<div class="modal-overlay" id="modalOverlay" onclick="CandidateApp.closeModal()"></div>
+<div class="modal" id="manifestoModal">
+    <span class="modal-close" onclick="CandidateApp.closeModal()">&times;</span>
+    <div class="modal-header" id="modalHeader">Manifesto</div>
+    <div id="modalContent"></div>
+</div>
+<div class="modal-overlay" id="voteModalOverlay" onclick="CandidateApp.closeVoteModal()"></div>
+<div class="modal" id="voteModal">
+    <span class="modal-close" onclick="CandidateApp.closeVoteModal()">&times;</span>
+    <div class="modal-header">Enter Your National ID</div>
+    <div>
+        <input type="text" id="voterId" placeholder="Enter National ID" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px;">
+        <button onclick="CandidateApp.submitVote()" style="width: 100%; padding: 10px; background-color: #2ecc71; color: white; border: none; border-radius: 5px;">Submit Vote</button>
+    </div>
+</div>
 <script>
-    async function fetchCandidates() {
-        const candidateContainer = document.getElementById("candidateContainer");
+    const CandidateApp = (() => {
+        let positionMap = {};
+        let candidates = [];
 
-        try {
+        async function fetchPositions() {
+            const response = await fetch("/api/categories");
+            const positions = await response.json();
+            const filter = document.getElementById("filter");
+            positions.forEach(pos => {
+                positionMap[pos.id] = pos.title;
+                const option = document.createElement("option");
+                option.value = pos.id;
+                option.textContent = pos.title;
+                filter.appendChild(option);
+            });
+        }
+
+        async function fetchCandidates() {
             const response = await fetch("/api/candidates/all");
-            if (!response.ok) {
-                throw new Error("Network response was not ok");
+            candidates = await response.json();
+            displayCandidates(candidates);
+        }
+
+        function displayCandidates(candidatesToShow) {
+            const container = document.getElementById("candidate-slider");
+            container.innerHTML = "";
+            candidatesToShow.forEach(c => {
+                const card = document.createElement("div");
+                card.className = "card";
+                card.innerHTML = `
+                <img src="data:image/jpeg;base64,${c.image}" alt="${c.name}">
+                <h3>${c.name}</h3>
+                <p>Position: ${positionMap[c.position]}</p>
+                <button class="view-button" onclick="CandidateApp.viewManifesto('${c.manifesto}')">View Manifesto</button>
+                <button class="vote-button" onclick="CandidateApp.vote('${c.candidateId}', '${c.position}', '${c.name}')">Vote</button>
+            `;
+                container.appendChild(card);
+            });
+        }
+
+        function filterCandidates() {
+            const filter = document.getElementById("filter").value;
+            const filtered = filter === "all" ? candidates : candidates.filter(c => c.position === filter);
+            displayCandidates(filtered);
+        }
+
+        function viewManifesto(manifesto) {
+            document.getElementById("modalHeader").textContent = "Candidate Manifesto";
+            document.getElementById("modalContent").textContent = manifesto;
+            document.getElementById("manifestoModal").style.display = "block";
+            document.getElementById("modalOverlay").style.display = "block";
+        }
+
+        function closeModal() {
+            document.getElementById("manifestoModal").style.display = "none";
+            document.getElementById("modalOverlay").style.display = "none";
+        }
+
+        function vote(candidateId, positionId,name) {
+            // Open the voting modal
+            document.getElementById("voteModal").style.display = "block";
+            document.getElementById("voteModalOverlay").style.display = "block";
+
+            // Store candidate and position data for submission
+            document.getElementById("voteModal").dataset.candidateId = candidateId;
+            document.getElementById("voteModal").dataset.positionId = positionId;
+            document.getElementById("voteModal").dataset.name = name;
+        }
+
+        function closeVoteModal() {
+            // Close the voting modal
+            document.getElementById("voteModal").style.display = "none";
+            document.getElementById("voteModalOverlay").style.display = "none";
+        }
+
+        async function submitVote() {
+            const candidateId = document.getElementById("voteModal").dataset.candidateId;
+            const positionId = document.getElementById("voteModal").dataset.positionId;
+            const name = document.getElementById("voteModal").dataset.name;
+            const voterId = document.getElementById("voterId").value.trim();
+
+            if (!voterId) {
+                alert("Please enter your National ID.");
+                return;
             }
 
-            const candidates = await response.json();
+            try {
+                const response = await fetch("/api/votes/cast", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        candidateId,
+                        voterId,
+                        position: positionMap[positionId],
+                        name
+                    })
+                });
 
-            candidates.forEach(candidate => {
-                const card = document.createElement("div");
-                card.classList.add("card");
-
-                // Ensure image decoding handles Base64 correctly
-                const base64Image = `data:image/jpeg;base64,${candidate.image}`;
-
-                card.innerHTML = `
-                    <img src="${base64Image}" alt="${candidate.name}">
-                    <h3>${candidate.name}</h3>
-                    <p>Party: ${candidate.partyAffiliation}</p>
-                    <p>Position: ${candidate.position}</p>
-                `;
-                candidateContainer.appendChild(card);
-            });
-        } catch (error) {
-            console.error("Failed to load candidates:", error);
-            candidateContainer.innerHTML = "<p>Error loading candidates. Please try again later.</p>";
+                if (response.ok) {
+                    alert("Your vote has been successfully cast!");
+                    closeVoteModal();
+                } else {
+                    const errorResponse = await response.json();
+                    // Handle meaningful error messages from the backend
+                    if (errorResponse) {
+                        alert(`Error: ${errorResponse}`);
+                    } else {
+                        alert("An unexpected error occurred. Please try again.");
+                    }
+                }
+            } catch (error) {
+                alert("An error occurred while submitting your vote. Please check your connection and try again.");
+            }
         }
-    }
+        async function init() {
+            await fetchPositions();
+            await fetchCandidates();
+        }
 
-    function login() {
-        window.location.href = "/login";
-    }
+        return {
+            init,
+            filterCandidates,
+            viewManifesto,
+            closeModal,
+            vote,
+            closeVoteModal,
+            submitVote,
+            login: () => (window.location.href = "/login")
+        };
+    })();
 
-    // Load candidates on page load
-    window.onload = fetchCandidates;
+    window.onload = CandidateApp.init;
 </script>
-
 </body>
 </html>

@@ -7,6 +7,6 @@ import java.util.List;
 
 @Repository
 public interface ResultRepository extends JpaRepository<Result, Long> {
-    List<Result> findByPositionRunningFor(String positionRunningFor);
+    Result findByCandidateIdAndPosition(Long candidateId, String position);
 }
 

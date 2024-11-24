@@ -32,6 +32,12 @@
             object-fit: cover;
             border-radius: 50%;
         }
+        .manifesto-cell {
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
 </head>
 <body>
@@ -50,6 +56,7 @@
                 <th>Name</th>
                 <th>Party Affiliation</th>
                 <th>Position</th>
+                <th>Manifesto</th>
                 <th>Actions</th>
             </tr>
             </thead>
@@ -62,7 +69,7 @@
 
 <!-- Modal for Add/Edit Candidate -->
 <div class="modal fade" id="candidateModal" tabindex="-1" aria-labelledby="candidateModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="candidateModalLabel">Add New Candidate</h5>
@@ -82,8 +89,11 @@
                         <label for="position" class="form-label">Position</label>
                         <select class="form-control" id="position" required>
                             <option value="" disabled selected>Select a position</option>
-                            <!-- Options will be populated dynamically -->
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="manifesto" class="form-label">Manifesto</label>
+                        <textarea class="form-control" id="manifesto" rows="4" required></textarea>
                     </div>
                     <div class="mb-3">
                         <label for="candidateImage" class="form-label">Image</label>
@@ -101,18 +111,25 @@
 <script>
     $(document).ready(function () {
         const apiBaseUrl = "/api/candidates";
-        const categoriesApiUrl = "/api/categories"; // Endpoint to fetch categories
+        const categoriesApiUrl = "/api/categories";
         let editingCandidateId = null;
 
         // Function to fetch and populate categories
         const fetchCategories = () => {
-            $.get(categoriesApiUrl, function (categories) {
-                const positionDropdown = $("#position");
-                positionDropdown.empty();
-                positionDropdown.append('<option value="" disabled selected>Select a position</option>');
-                categories.forEach(category => {
-                    positionDropdown.append(`<option value="${category.name}">${category.name}</option>`);
-                });
+            $.ajax({
+                url: categoriesApiUrl,
+                method: "GET",
+                success: function(categories) {
+                    const positionDropdown = $("#position");
+                    positionDropdown.empty();
+                    positionDropdown.append('<option value="" disabled selected>Select a position</option>');
+                    categories.forEach(category => {
+                        positionDropdown.append(`<option value="${category.id}">${category.title}</option>`);
+                    });
+                },
+                error: function() {
+                    alert("Failed to fetch categories");
+                }
             });
         };
 
@@ -131,6 +148,7 @@
                         <td>${candidate.name}</td>
                         <td>${candidate.partyAffiliation}</td>
                         <td>${candidate.position}</td>
+                        <td class="manifesto-cell" title="${candidate.manifesto}">${candidate.manifesto}</td>
                         <td>
                             <button class="btn btn-warning btn-sm" onclick="editCandidate(${candidate.candidateId})">
                                 <i class="fas fa-edit"></i> Edit
@@ -154,7 +172,7 @@
 
         $("#addCandidateButton").click(() => {
             resetForm();
-            fetchCategories(); // Populate dropdown when opening modal
+            fetchCategories();
             $("#candidateModal").modal("show");
         });
 
@@ -164,33 +182,32 @@
             formData.append("name", $("#candidateName").val());
             formData.append("partyAffiliation", $("#partyAffiliation").val());
             formData.append("position", $("#position").val());
+            formData.append("manifesto", $("#manifesto").val());
             const imageFile = $("#candidateImage")[0].files[0];
             if (imageFile) {
                 formData.append("image", imageFile);
             }
 
-            if (editingCandidateId) {
-                $.ajax({
-                    url: `${apiBaseUrl}/update/${editingCandidateId}`,
-                    method: "PUT",
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: fetchCandidates,
-                    error: () => alert("Failed to update candidate."),
-                });
-            } else {
-                $.ajax({
-                    url: `${apiBaseUrl}/add`,
-                    method: "POST",
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: fetchCandidates,
-                    error: () => alert("Failed to add candidate."),
-                });
-            }
-            $("#candidateModal").modal("hide");
+            const url = editingCandidateId
+                ? `${apiBaseUrl}/update/${editingCandidateId}`
+                : `${apiBaseUrl}/add`;
+
+            const method = editingCandidateId ? "PUT" : "POST";
+
+            $.ajax({
+                url: url,
+                method: method,
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function() {
+                    fetchCandidates();
+                    $("#candidateModal").modal("hide");
+                },
+                error: function() {
+                    alert(`Failed to ${editingCandidateId ? 'update' : 'add'} candidate.`);
+                }
+            });
         });
 
         window.editCandidate = (id) => {
@@ -198,8 +215,14 @@
                 editingCandidateId = id;
                 $("#candidateName").val(candidate.name);
                 $("#partyAffiliation").val(candidate.partyAffiliation);
-                $("#position").val(candidate.position);
-                fetchCategories(); // Ensure dropdown is populated before showing modal
+                $("#manifesto").val(candidate.manifesto);
+
+                // Fetch categories first, then set the position
+                fetchCategories();
+                setTimeout(() => {
+                    $("#position").val(candidate.position);
+                }, 500);
+
                 $("#candidateModalLabel").text("Edit Candidate");
                 $("#candidateModal").modal("show");
             });
@@ -218,7 +241,7 @@
 
         // Initial fetch
         fetchCandidates();
-        fetchCategories(); // Populate dropdown on page load
+        fetchCategories();
     });
 </script>
 </body>

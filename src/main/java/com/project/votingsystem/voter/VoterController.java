@@ -23,7 +23,7 @@ public class VoterController {
     // Endpoint to register a new voter
     @PostMapping("/register")
     public ResponseEntity<String> registerVoter(@RequestBody Map<String, String> voterData) {
-        String nationalId = voterData.get("nationalId");
+        Long nationalId = Long.valueOf(voterData.get("nationalId"));
         String name = voterData.get("name");
         String password = voterData.get("password");
 
@@ -31,7 +31,7 @@ public class VoterController {
         String role = "VOTER";
 
         // Call the service to register the voter
-        String response = voterService.registerVoter(nationalId, name, password, role);
+        String response = voterService.registerVoter(Long.valueOf(nationalId), name, password, role);
 
         // Return the appropriate response
         return response.contains("successfully")
@@ -40,7 +40,7 @@ public class VoterController {
     }
 
     @PostMapping("/login")
-    public ModelAndView login(@RequestParam String nationalId,
+    public ModelAndView login(@RequestParam Long nationalId,
                               @RequestParam String password,
                               RedirectAttributes redirectAttributes) {
         // Authenticate voter
@@ -52,14 +52,12 @@ public class VoterController {
             // Save role, ID, and national ID in preferences
             Preferences prefs = Preferences.userNodeForPackage(VoterController.class);
             prefs.putLong("loggedInVoterId", voter.getVoterId());
-            prefs.put("loggedInVoterNationalId", voter.getNationalId());
+            prefs.put("loggedInVoterNationalId", String.valueOf(voter.getNationalId()));
             prefs.put("loggedInVoterRole", voter.getRole());
 
             // Redirect based on user role
             if ("ADMIN".equals(voter.getRole())) {
                 return new ModelAndView(new RedirectView("/adminDashboard"));
-            } else if ("VOTER".equals(voter.getRole())) {
-                return new ModelAndView(new RedirectView("/voterDashboard"));
             } else {
                 redirectAttributes.addFlashAttribute("errorMessage", "Access denied: Unknown role");
                 return new ModelAndView(new RedirectView("/login"));

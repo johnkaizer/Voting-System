@@ -13,25 +13,20 @@ public class ResultController {
     @Autowired
     private ResultService resultService;
 
-    // Endpoint to increment vote count for a candidate
-    @PostMapping("/increment/{candidateId}")
-    public ResponseEntity<String> incrementVoteCount(@PathVariable Long candidateId) {
-        String response = resultService.incrementVoteCount(candidateId);
-        return response.contains("incremented successfully") ? ResponseEntity.ok(response) : ResponseEntity.status(404).body(response);
+    @Autowired
+    private ResultRepository resultRepository;
+
+    // Trigger result calculation and update
+    @PostMapping("/update")
+    public ResponseEntity<String> updateResults() {
+        resultService.updateResults();
+        return ResponseEntity.ok("Results have been updated.");
     }
 
-    // Endpoint to get all results
-    @GetMapping("/all")
-    public ResponseEntity<List<Result>> getAllResults() {
-        List<Result> results = resultService.getAllResults();
+    // Fetch all results
+    @GetMapping
+    public ResponseEntity<List<Result>> getResults() {
+        List<Result> results = resultRepository.findAll();
         return ResponseEntity.ok(results);
     }
-
-    // Endpoint to get results by position
-    @GetMapping("/position/{position}")
-    public ResponseEntity<List<Result>> getResultsByPosition(@PathVariable String position) {
-        List<Result> results = resultService.getResultsByPosition(position);
-        return results.isEmpty() ? ResponseEntity.status(404).body(null) : ResponseEntity.ok(results);
-    }
 }
-

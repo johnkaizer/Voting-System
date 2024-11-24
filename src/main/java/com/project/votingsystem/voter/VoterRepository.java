@@ -6,6 +6,8 @@ import java.util.Optional;
 
 @Repository
 public interface VoterRepository extends JpaRepository<Voter, Long> {
-    Optional<Voter> findByNationalId(String nationalId); // Used for login and registration checks
+    Optional<Voter> findByNationalId(Long nationalId);
+    // Check if a National ID exists in the voters table
+    boolean existsByNationalId(Long nationalId);
 }
 

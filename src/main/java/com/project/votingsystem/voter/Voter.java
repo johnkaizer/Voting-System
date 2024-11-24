@@ -13,7 +13,7 @@ public class Voter {
     private Long voterId; // Unique identifier for each voter
 
     @Column(nullable = false, unique = true)
-    private String nationalId; // National ID, unique for each voter
+    private Long nationalId; // National ID, unique for each voter
 
     @Column(nullable = false)
     private String name; // Full name of the voter
@@ -23,7 +23,4 @@ public class Voter {
 
     @Column(nullable = false)
     private String role; // e.g., "VOTER", "ADMIN"
-
-    @Column(nullable = false)
-    private boolean votingStatus = false; // Tracks if the voter has voted
 }

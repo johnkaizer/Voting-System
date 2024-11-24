@@ -1,4 +1,4 @@
-package com.project.votingsystem;
+package com.project.votingsystem.config;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,10 +14,6 @@ public class VotingSystemController {
     @GetMapping("/adminDashboard")
     public String adminDashboard() {
         return "adminDashboard";
-    }
-    @GetMapping("/voterDashboard")
-    public String voterDashboard() {
-        return "voterDashboard";
     }
     @GetMapping("/login")
     public String login() {

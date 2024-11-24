@@ -12,13 +12,15 @@ public class Vote {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long voteId;
+    private Long id;
 
     @Column(nullable = false)
-    private String voterId; // National ID or unique identifier for the Voter
+    private Long voterId; // National ID
 
     @Column(nullable = false)
-    private String candidateId; // Unique identifier for the Candidate
+    private Long candidateId; // Unique identifier for the Candidate
+
+    private String name; // Unique identifier for the Candidate
 
     @Column(nullable = false)
     private String position; // Voting position, e.g., "PRESIDENT", "GOVERNOR", etc.

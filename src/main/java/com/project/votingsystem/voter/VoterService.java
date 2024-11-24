@@ -12,7 +12,7 @@ public class VoterService {
     private VoterRepository voterRepository;
 
     // Register a new voter
-    public String registerVoter(String nationalId, String name, String password, String role) {
+    public String registerVoter(Long nationalId, String name, String password, String role) {
         if (voterRepository.findByNationalId(nationalId).isPresent()) {
             return "A voter with this National ID is already registered.";
         }
@@ -27,7 +27,7 @@ public class VoterService {
     }
 
     // Login voter with National ID and password
-    public Optional<Voter> loginVoter(String nationalId, String password) {
+    public Optional<Voter> loginVoter(Long nationalId, String password) {
         Optional<Voter> voter = voterRepository.findByNationalId(nationalId);
 
         // Check if voter exists and password matches

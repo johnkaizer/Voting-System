@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results Page</title>
+    <style>
+        /* Basic styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        .table-container, .cards-container {
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f8f8f8;
+        }
+
+        .card {
+            background-color: #f8f8f8;
+            padding: 15px;
+            margin: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            width: calc(33% - 20px);
+            text-align: center;
+        }
+
+        .card h3 {
+            font-size: 1.2em;
+            color: #333;
+        }
+
+        .card p {
+            color: #666;
+            font-size: 1em;
+        }
+
+        @media (max-width: 768px) {
+            .card {
+                width: 100%;
+            }
+        }
+
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Election Results</h1>
+
+    <!-- Table view for results -->
+    <div class="table-container">
+        <h2>Results Table</h2>
+        <table id="resultsTable">
+            <thead>
+            <tr>
+                <th>Candidate Name</th>
+                <th>Position</th>
+                <th>Vote Count</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Dynamic rows will be inserted here -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Card view for results -->
+    <div class="cards-container">
+        <h2>Results Cards</h2>
+        <!-- Dynamic cards will be inserted here -->
+    </div>
+
+    <!-- Exit Button to go back to Landing Page -->
+    <button class="btn" onclick="goBack()">Exit to Landing Page</button>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        fetchResults();
+    });
+
+    function fetchResults() {
+        fetch('/api/results')  // Fetch results from your Spring Boot API
+            .then(response => response.json())
+            .then(data => {
+                displayResultsInTable(data);
+                displayResultsInCards(data);
+            })
+            .catch(error => {
+                console.error('Error fetching results:', error);
+            });
+    }
+
+    function displayResultsInTable(results) {
+        const tableBody = document.querySelector('#resultsTable tbody');
+        tableBody.innerHTML = ''; // Clear the existing table content
+
+        results.forEach(result => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                    <td>${result.name}</td>
+                    <td>${result.position}</td>
+                    <td>${result.voteCount}</td>
+                `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    function displayResultsInCards(results) {
+        const cardsContainer = document.querySelector('.cards-container');
+        cardsContainer.innerHTML = ''; // Clear existing cards
+
+        results.forEach(result => {
+            const card = document.createElement('div');
+            card.classList.add('card');
+            card.innerHTML = `
+                    <h3>${result.name}</h3>
+                    <p><strong>Position:</strong> ${result.position}</p>
+                    <p><strong>Votes:</strong> ${result.voteCount}</p>
+                `;
+            cardsContainer.appendChild(card);
+        });
+    }
+
+    function goBack() {
+        window.location.href = '/'; // Redirect to the landing page
+    }
+</script>
+</body>
+</html>
