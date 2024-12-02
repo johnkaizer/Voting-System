@@ -88,6 +88,11 @@
         .view-button {
             background-color: #3498db;
             color: #fff;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
         }
 
         .vote-button {
@@ -168,6 +173,7 @@
 <header>
     <h1>E-Voting System</h1>
     <button class="login-button" onclick="CandidateApp.login()">Login</button>
+    <button class="view-button" onclick="CandidateApp.results()">View Results</button>
 </header>
 
 <div class="filter-container">
@@ -337,7 +343,8 @@
             vote,
             closeVoteModal,
             submitVote,
-            login: () => (window.location.href = "/login")
+            login: () => (window.location.href = "/login"),
+            results: () => (window.location.href = "/results")
         };
     })();
 

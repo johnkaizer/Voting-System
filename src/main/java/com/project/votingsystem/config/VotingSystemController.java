@@ -23,6 +23,10 @@ public class VotingSystemController {
     public String register() {
         return "register";
     }
+    @GetMapping("/results")
+    public String results() {
+        return "results";
+    }
     @GetMapping("/fragments/{page}")
     public String loadPage(@PathVariable String page) {
         return "fragments/" + page;

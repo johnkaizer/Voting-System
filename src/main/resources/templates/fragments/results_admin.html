@@ -117,61 +117,63 @@
         <h2>Results Cards</h2>
         <!-- Dynamic cards will be inserted here -->
     </div>
-
-    <!-- Exit Button to go back to Landing Page -->
-    <button class="btn" onclick="goBack()">Exit to Landing Page</button>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    $(document).ready(function () {
+        console.log("Document is ready. Fetching results...");
         fetchResults();
     });
 
     function fetchResults() {
-        fetch('/api/results')  // Fetch results from your Spring Boot API
-            .then(response => response.json())
-            .then(data => {
+        $.ajax({
+            url: 'http://localhost:8090/api/results', // Ensure this URL is correct
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                console.log("Data fetched successfully:", data);
                 displayResultsInTable(data);
                 displayResultsInCards(data);
-            })
-            .catch(error => {
-                console.error('Error fetching results:', error);
-            });
+            },
+            error: function (xhr, status, error) {
+                console.error("Error fetching results:", error);
+                console.log("XHR:", xhr);
+                console.log("Status:", status);
+            }
+        });
     }
 
     function displayResultsInTable(results) {
-        const tableBody = document.querySelector('#resultsTable tbody');
-        tableBody.innerHTML = ''; // Clear the existing table content
+        const tableBody = $('#resultsTable tbody');
+        tableBody.empty(); // Clear the existing table content
 
         results.forEach(result => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${result.name}</td>
-                <td>${result.position}</td>
-                <td>${result.voteCount}</td>
-            `;
-            tableBody.appendChild(row);
+            const row = `
+                <tr>
+                    <td>${result.name}</td>
+                    <td>${result.position}</td>
+                    <td>${result.voteCount}</td>
+                </tr>`;
+            tableBody.append(row);
         });
+        console.log("Table populated with results.");
     }
 
     function displayResultsInCards(results) {
-        const cardsContainer = document.querySelector('.cards-container');
-        cardsContainer.innerHTML = ''; // Clear existing cards
+        const cardsContainer = $('.cards-container');
+        cardsContainer.empty(); // Clear existing cards
 
         results.forEach(result => {
-            const card = document.createElement('div');
-            card.classList.add('card');
-            card.innerHTML = `
-                <h3>${result.name}</h3>
-                <p><strong>Position:</strong> ${result.position}</p>
-                <p><strong>Votes:</strong> ${result.voteCount}</p>
-            `;
-            cardsContainer.appendChild(card);
+            const card = `
+                <div class="card">
+                    <h3>${result.name}</h3>
+                    <p><strong>Position:</strong> ${result.position}</p>
+                    <p><strong>Votes:</strong> ${result.voteCount}</p>
+                </div>`;
+            cardsContainer.append(card);
         });
-    }
-
-    function goBack() {
-        window.location.href = '/'; // Redirect to the landing page
+        console.log("Cards populated with results.");
     }
 </script>
 </body>

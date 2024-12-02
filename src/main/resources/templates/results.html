@@ -26,6 +26,16 @@
             color: #333;
         }
 
+        .notice {
+            background-color: #e7f3fe;
+            color: #31708f;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #bce8f1;
+            border-radius: 5px;
+            text-align: center;
+        }
+
         .table-container, .cards-container {
             margin-top: 20px;
         }
@@ -93,6 +103,11 @@
 </head>
 <body>
 <div class="container">
+    <!-- Notice about updates -->
+    <div class="notice">
+        Note: Results are updated every minute as new data becomes available.
+    </div>
+
     <h1>Election Results</h1>
 
     <!-- Table view for results -->
@@ -119,55 +134,72 @@
     </div>
 
     <!-- Exit Button to go back to Landing Page -->
-    <button class="btn" onclick="goBack()">Exit to Landing Page</button>
+    <button class="btn" id="exitButton">Exit to Landing Page</button>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    $(document).ready(function () {
+        console.log("Document is ready. Fetching results...");
         fetchResults();
+
+        // Attach event listener to the Exit button
+        $('#exitButton').on('click', function () {
+            goBack();
+        });
+
+        // Set an interval to refresh results every 1 minute
+        setInterval(fetchResults, 60000);
     });
 
     function fetchResults() {
-        fetch('/api/results')  // Fetch results from your Spring Boot API
-            .then(response => response.json())
-            .then(data => {
+        $.ajax({
+            url: 'http://localhost:8090/api/results', // Ensure this URL is correct
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                console.log("Data fetched successfully:", data);
                 displayResultsInTable(data);
                 displayResultsInCards(data);
-            })
-            .catch(error => {
-                console.error('Error fetching results:', error);
-            });
+            },
+            error: function (xhr, status, error) {
+                console.error("Error fetching results:", error);
+                console.log("XHR:", xhr);
+                console.log("Status:", status);
+            }
+        });
     }
 
     function displayResultsInTable(results) {
-        const tableBody = document.querySelector('#resultsTable tbody');
-        tableBody.innerHTML = ''; // Clear the existing table content
+        const tableBody = $('#resultsTable tbody');
+        tableBody.empty(); // Clear the existing table content
 
         results.forEach(result => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
+            const row = `
+                <tr>
                     <td>${result.name}</td>
                     <td>${result.position}</td>
                     <td>${result.voteCount}</td>
-                `;
-            tableBody.appendChild(row);
+                </tr>`;
+            tableBody.append(row);
         });
+        console.log("Table populated with results.");
     }
 
     function displayResultsInCards(results) {
-        const cardsContainer = document.querySelector('.cards-container');
-        cardsContainer.innerHTML = ''; // Clear existing cards
+        const cardsContainer = $('.cards-container');
+        cardsContainer.empty(); // Clear existing cards
 
         results.forEach(result => {
-            const card = document.createElement('div');
-            card.classList.add('card');
-            card.innerHTML = `
+            const card = `
+                <div class="card">
                     <h3>${result.name}</h3>
                     <p><strong>Position:</strong> ${result.position}</p>
                     <p><strong>Votes:</strong> ${result.voteCount}</p>
-                `;
-            cardsContainer.appendChild(card);
+                </div>`;
+            cardsContainer.append(card);
         });
+        console.log("Cards populated with results.");
     }
 
     function goBack() {
